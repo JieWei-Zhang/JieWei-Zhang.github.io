@@ -1,7 +1,7 @@
 # Basic
 title: JieWei
 subtitle: 凡是人 总有取舍.
-welcome_message: <a href="https://github.com/onevcat/vno-jekyll" target="_blank">Download the theme</a>
+
 description: Welcome to my blog,I'm Zhang Jiewei,一名iOS开发者.追求物质的同时,也想着能读很多书,走很多路,过简单的生活,梦里只有十人和远方🏃🏃.
 
 creator: <a href="http://onev.cat">@onevcat</a>
@@ -26,7 +26,7 @@ blog_button:
 
 # Navigation buttons in the front page.
 nav:
-    - {title: Projects, description: My Projects, url: 'http://project.onevcat.com'}
+    - {title: Projects, description: My product, url: 'http://b.mashort.cn/h.m6KUG?cv=AADXnjmh&sm=9f3c25'}
     # - {title: Another Button, description: A button, url: 'http://example.com'}
 
 # Pagination
@@ -41,11 +41,9 @@ comment:
     
 # Social
 social:
-    weibo: onevcat
-    github: onevcat
-    twitter: onevcat
-    gplus: 107108267983477358170
-    mail: onev@onevcat.com
+    weibo: Anderson-Lii
+    github: JieWei-Zhang
+    mail: 836654084@qq.com
 
 # Google Analytics
 ga:
