@@ -1,18 +1,18 @@
 # Site settings
-title: Jekyll-Uno
-description: 'Jekyll-Uno - a minimal, responsive theme for Jekyll'
+title: JieWei
+description: '凡是人总有取舍'
 url: 'http://joshgerdes.com/jekyll-uno'
-baseurl: '/jekyll-uno/'
+baseurl: '/jiewei-zhang.github.io/'
 # google_analytics: 'UA-XXXXXX-X'
 # disqus_shortname: 'your-disqus-name'
 
 author:
-  name: 'Josh Gerdes'
-  email: josh@joshgerdes.com
-  twitter_username: joshgerdes
-  facebook_username: joshgerdes
-  github_username:  joshgerdes
-  linkedin_username:  joshgerdes
+  name: 'JieWei'
+  email: j836654084@qq.com
+  twitter_username: JieWei
+  facebook_username: JieWei
+  github_username:  JieWei
+  linkedin_username:  JieWei
 
 defaults:
   -
