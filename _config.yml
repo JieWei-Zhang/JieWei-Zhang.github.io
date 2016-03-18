@@ -1,39 +1,52 @@
-# Site settings
-title: JW
-description: 'Jekyll-Uno - a minimal, responsive theme for Jekyll'
-url: 'http://joshgerdes.com/jekyll-uno'
+# Basic
+title: Vno Jekyll
+subtitle: A blog-orientation theme for Jekyll
+welcome_message: <a href="https://github.com/onevcat/vno-jekyll" target="_blank">Download the theme</a>
+description: Vno Jekyll is a port of my Ghost theme vno.
+creator: <a href="http://onev.cat">@onevcat</a>
 
-# google_analytics: 'UA-XXXXXX-X'
-# disqus_shortname: 'your-disqus-name'
+url: "http://blog.onevcat.com"
 
-author:
-  name: 'JW'
-  email: 836654084@qq.com
-  twitter_username: JW
-  facebook_username: JW
-  github_username:  JW
-  linkedin_username:  JW
+permalink: /:year/:month/:title/
 
-defaults:
-  -
-    scope:
-      path: ''
-      type: 'posts'
-    values:
-        layout: 'post'
+# Format
+highlighter: plain
+markdown: redcarpet
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "strikethrough", "superscript", tables]
 
-# Build settings
-destination: _site
+# supported colors: blue, green, purple, red, orange or slate. If you need clear, leave it empty.
+cover_color: red
+
+# The blog button should not be removed.
+blog_button:
+    title: Blog
+    description: Visit blog
+
+# Navigation buttons in the front page.
+nav:
+    - {title: Projects, description: My Projects, url: 'http://project.onevcat.com'}
+    # - {title: Another Button, description: A button, url: 'http://example.com'}
+
+# Pagination
+gems: [jekyll-paginate]
 paginate: 10
-permalink: /:year/:title/
-markdown: kramdown
-highlighter: rouge
+paginate_path: "page/:num/"
 
-kramdown:
-  # use Github Flavored Markdown
-  input: GFM
-  # do not replace newlines by <br>s
-  hard_wrap: false
+# Comment
+comment:
+    disqus: vno-jekyll
+    # duoshuo: 
+    
+# Social
+social:
+    weibo: onevcat
+    github: onevcat
+    twitter: onevcat
+    gplus: 107108267983477358170
+    mail: onev@onevcat.com
 
-gems: ['jekyll-paginate']
-exclude: ['README.md', 'Gemfile', 'Gemfile.lock', 'screenshot.png']
+# Google Analytics
+ga:
+    # id: your_ga_id
+    # host: your_host
