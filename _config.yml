@@ -26,7 +26,7 @@ blog_button:
 
 # Navigation buttons in the front page.
 nav:
-    - {title: Projects, description: My product, url: 'http://b.mashort.cn/h.m6KUG?cv=AADXnjmh&sm=9f3c25'}
+    - {title: Product, description: My Product, url: 'http://b.mashort.cn/h.m6KUG?cv=AADXnjmh&sm=9f3c25'}
     # - {title: Another Button, description: A button, url: 'http://example.com'}
 
 # Pagination
