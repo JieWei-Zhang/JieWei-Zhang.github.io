@@ -6,8 +6,6 @@ description: Welcome to my blog,I'm Zhang Jiewei,一名iOS开发者.追求物质
 
 creator: <a href="blog.zhangjiewei.com">@JieWei</a>
 
-url: "blog.zhangjiewei.com"
-
 permalink: /:year/:month/:title/
 
 # Format
