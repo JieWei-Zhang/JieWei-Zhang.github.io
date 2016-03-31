@@ -1,0 +1,297 @@
+---
+layout: post
+title:  "iOS中小数精确计算"
+date:   2016-03-21 10:04:23.000000000 +09:00
+---
+
+#NSDecimalNumber
+
+英文好的可以直接[看这个][RyPress]
+
+```
+在iOS开发中，和货币价格计算相关的，需要注意计算精度的问题。即使只是两位小数，也会出现误差。使用float类型运算，是完全不够的。所以我在网上来找寻答案,但是在百度找了好久,没有发现一个好的解决方案,后来发现了NSDecimalNumber这个类,但是国内搜索引擎上的资料用太少了,所以自己通过找资料的方法发现了如下这篇文章.
+```
+
+先叙述下我遇到的问题,我的服务器传给我的是一个float的值,作为一个对外的库，由于存在版本延续，需要保留对外的flaot的类型，不改变API，选择进行内部适配。
+
+{% highlight ruby %}
+float a = 0.01;
+int b = 99999999;
+double c = 0.0;
+c = a*b;
+NSLog(@"%f",c);     //输出结果为 1000000.000000
+NSLog(@"%.2f",c);   //输出结果为 1000000.00
+
+//明显不够精确
+{% endhighlight %}
+
+在网上找到了一个国内朋友的博客也遇到和我一样的问题,他尝试了如下两种解决方案
+将`float`强制转换为`double`
+
+{% highlight ruby %}
+c = a*(double)b;
+NSLog(@"%f",c);     //输出结果  999999.967648
+NSLog(@"%.2f",c);   //输出结果  999999.97
+
+// 明显已经丢失精度
+{% endhighlight %}
+
+通过和`NSString`的转换，将计算的原始数据转换为纯粹的`double`类型的数据，这样的计算精度就可以达到要求了
+
+{% highlight ruby %}
+NSString *objA = [NSString stringWithFormat:@"%.2f", a];
+NSString *objB = [NSString stringWithFormat:@"%.2f", (double)b];
+c = [objA doubleValue] * [objB doubleValue];
+NSLog(@"%.2f",c);   //输出结果  999999.99
+{% endhighlight %}
+
+最终方案
+
+{% highlight ruby %}
+NSString *decimalNumberMutiplyWithString(NSString *multiplierValue,NSString *multiplicandValue)
+{
+     NSDecimalNumber *multiplierNumber = [NSDecimalNumber decimalNumberWithString:multiplierValue];
+     NSDecimalNumber *multiplicandNumber = [NSDecimalNumber decimalNumberWithString:multiplicandValue];
+     NSDecimalNumber *product = [multiplicandNumber decimalNumberByMultiplyingBy:multiplierNumber];
+     return [product stringValue];
+}
+ 
+NSLog(@"%@",decimalNumberMutiplyWithString([NSString stringWithFormat:@"%f",a], [NSString stringWithFormat:@"%d",b]));
+
+//输出结果  999999.99
+{% endhighlight %}
+
+#下面开始讲解这个NSDecimalNumber
+
+The NSDecimalNumber class provides fixed-point arithmetic`算法` capabilities`功能` to Objective-C programs. They’re designed to perform base-10 calculations without loss of precision`精度` and with predictable`可预测的` rounding`凑整` behavior. This makes it a better choice for representing表示 currency货币 than floating-point data types like double. However, the trade-off is that they are more complicated to work with.
+
+{% highlight ruby %}
+`NSDecimalNumber`这个类为OC程序提供了定点算法功能,它被设计为了不会损失精度并且可预先设置凑整规则的10进制计算,这让它成为一个比浮点数`(double)`更好的选则去表示货币,然而作为交换用`NSDecimalNumber`计算变得更加复杂
+{% endhighlight %}
+
+![](/Users/vinhome/Desktop/JieWei-Zhang.github.io/_posts/o_fixed-point-representation.png)
+
+Internally, a fixed-point number is expressed as`表示为` sign`符号` mantissa`尾数` x 10^exponent`指数`. The sign defines whether it’s positive or negative, the mantissa is an unsigned integer representing the significant`有意义的` digits`有效数字`, and the exponent determines where the decimal`小数` point falls in the mantissa.</n/r>
+```在内部,一个有小数点的数被表示为上图中的这种形式,这个符号定义了它是正数还是负数,这个尾数是一个无符号的整数用来表示有效数字,这个指数决定了小数点在尾数中的位置
+```
+
+It’s possible to`对...是可能的` manually`手动地` assemble`装配` an NSDecimalNumber from a mantissa, exponent, and sign, but it’s often easier to convert it from a string representation`表示`. The following snippet`片段` creates the value 15.99 using both methods.
+
+{% highlight ruby %}
+NSDecimalNumber *price;
+    price = [NSDecimalNumber decimalNumberWithMantissa:1599
+                                              exponent:-2
+                                              isNegative:NO];
+    price = [NSDecimalNumber decimalNumberWithString:@"15.99"];
+{% endhighlight %}
+
+```对手动地用尾数,指数,符号来装配一个NSDecimalNumber是可能的,但是但是从一个字符串表示转换成一个NSDecimalNumber更容易,以下的片段创建了值15.99用两个方法```
+
+Like NSNumber, all NSDecimalNumber objects are immutable`不可变的`, which means you cannot change their value after they’ve been created.
+
+```像NSNumber一样,所有的NSDecimalNumber对象都是不可变额,这意味着在它们创建之后不能改变它们的值```
+
+###Arithmetic `算法`
+
+The main job of NSDecimalNumber is to provide fixed-point alternatives`可供选择的事物` to C’s native`原生` arithmetic operations`操作`. All five of NSDecimalNumber’s arithmetic methods are demonstrated`演示` below`在...下`.
+
+```NSDecimalNumber的主要工作是提供可供选择的定点算法给C的原生算法操作,全部的五个NSDecimalNumber的计算方法在下面被演示```
+
+{% highlight ruby %}
+NSDecimalNumber *price1 = [NSDecimalNumber decimalNumberWithString:@"15.99"];
+    NSDecimalNumber *price2 = [NSDecimalNumber decimalNumberWithString:@"29.99"];
+    NSDecimalNumber *coupon = [NSDecimalNumber decimalNumberWithString:@"5.00"];
+    NSDecimalNumber *discount = [NSDecimalNumber decimalNumberWithString:@".90"];
+    NSDecimalNumber *numProducts = [NSDecimalNumber decimalNumberWithString:@"2.0"];
+    NSDecimalNumber *subtotal = [price1 decimalNumberByAdding:price2];
+    NSDecimalNumber *afterCoupon = [subtotal decimalNumberBySubtracting:coupon];
+    NSDecimalNumber *afterDiscount = [afterCoupon decimalNumberByMultiplyingBy:discount];
+    NSDecimalNumber *average = [afterDiscount decimalNumberByDividingBy:numProducts];
+    NSDecimalNumber *averageSquared = [average decimalNumberByRaisingToPower:2];
+    NSLog(@"Subtotal: %@", subtotal);                       // 45.98
+    NSLog(@"After coupon: %@", afterCoupon);                // 40.98
+    NSLog((@"After discount: %@"), afterDiscount);          // 36.882
+    NSLog(@"Average price per product: %@", average);       // 18.441
+    NSLog(@"Average price squared: %@", averageSquared);    // 340.070481
+{% endhighlight %}
+
+Unlike their floating-point counterparts`相对物`, these operations are guaranteed`保证` to be accurate`精确`. However, you’ll notice that many of the above calculations result in extra decimal places. Depending on the application, this may or may not be desirable (e.g., you might want to constrain`约束` currency values to 2 decimal places). This is where custom rounding`凑整` behavior comes in.
+
+```不像它们的相对物浮点,这些操作保证了精确性,然而,你会注意到有很多超出计算结果的额外小数位,根据这个应用,它们可能会也可能不会令人满意(例如,你可能想约束货币值只有2个小数位),这是为什么自定义进位行为被引入的原因```
+
+###Rounding Behavior
+
+{% highlight ruby %}
+// Rounding policies :
+    // Original
+    // value    1.2  1.21  1.25  1.35  1.27
+    // Plain    1.2  1.2   1.3   1.4   1.3
+    // Down     1.2  1.2   1.2   1.3   1.2
+    // Up       1.2  1.3   1.3   1.4   1.3
+    // Bankers  1.2  1.2   1.2   1.4   1.3
+{% endhighlight %}
+
+Each of the above arithmetic methods have an alternate`替换物` withBehavior: form that let you define how the operation rounds the resulting value. The NSDecimalNumberHandler class encapsulates`封装` a particular`多有的,特别的` rounding behavior and can be instantiated as follows:
+
+```每一个在上文中的计算方法有一个替换物---behavior:下面列出了让你定义这个操作凑整这个结果的值,这个类封装了一个特别的凑整行为,可以被实例化如下:```
+
+{% highlight ruby %}
+NSDecimalNumberHandler *roundUp = [NSDecimalNumberHandler
+                                       decimalNumberHandlerWithRoundingMode:NSRoundUp
+                                       scale:2
+                                       raiseOnExactness:NO
+                                       raiseOnOverflow:NO
+                                       raiseOnUnderflow:NO
+                                       raiseOnDivideByZero:YES];
+{% endhighlight %}
+
+
+The NSRoundUp argument`属性` makes all operations round up to the nearest place. Other rounding options选项 are NSRoundPlain, NSRoundDown, and NSRoundBankers, all of which are defined by NSRoundingMode. The scale: parameter`参数` defines the number of decimal places the resulting value should have, and the rest of`其余的` the parameters`参数` define the exception-handling behavior of any operations. In this case, NSDecimalNumber will only raise an exception if you try to divide by zero.
+
+```NSRoundUp属性使所有的操作算到最近的位置,其他的进位选项是NSRoundPlain, NSRoundDown, 和 NSRoundBankers,它们都被定义在NSRoundingMode,scale参数定义了结果值保留的小数位的数量,其余的参数给所有的操作定义了异常处理行为,这这个例子中,NSDecimalNumber将只捕获一个异常,如果你尝试除0.```
+
+This rounding behavior can then be passed to the decimalNumberByMultiplyingBy:withBehavior: method (or any of the other arithmetic methods), as shown below.
+```这个凑整的行为可以在之后被调用通过decimalNumberByMultiplyingBy:withBehavior:这个方法(或者任何其他的计算方法),如下所示.```
+
+{% highlight ruby %}
+NSDecimalNumber *subtotal = [NSDecimalNumber decimalNumberWithString:@"40.98"];
+NSDecimalNumber *discount = [NSDecimalNumber decimalNumberWithString:@".90"];
+NSDecimalNumber *total = [subtotal decimalNumberByMultiplyingBy:discount
+                                                       withBehavior:roundUp];
+NSLog(@"Rounded total: %@", total);
+{% endhighlight %}
+
+Now, instead of 36.882, the total gets rounded up to two decimal points, resulting in 36.89.
+```现在,代替36.882,这个total算到2个小数位,结果是36.89```
+###Comparing NSDecimalNumbers
+Like NSNumber, NSDecimalNumber objects should use the compare: method instead of the native inequality`不等` operators. Again, this ensures that values are compared, even if they are stored`存储于` in different instances. For example:
+```像NSNumber, NSDecimalNumber对象应该用compare:方法代替原生的不等式操作,此外,这确保了值被比较,即使他们存储于不通的实例中,例如```
+
+{% highlight ruby %}
+NSDecimalNumber*discount1 = [NSDecimalNumber decimalNumberWithString:@".85"];
+    
+NSDecimalNumber*discount2 = [NSDecimalNumber decimalNumberWithString:@".9"];
+    
+NSComparisonResult result = [discount1 compare:discount2];
+    
+if (result ==NSOrderedAscending) {
+ 
+     NSLog(@"85%% < 90%%小于");
+ 
+} else if (result == NSOrderedSame) {
+
+     NSLog(@"85%% == 90%%等于");
+
+} else if (result ==NSOrderedDescending) {
+ 
+    NSLog(@"85%% > 90%%大于");
+
+}
+{% endhighlight %}
+
+NSDecimalNumber also inherits`继承` the isEqualToNumber: method from NSNumber.
+```NSDecimalNumber也从NSNumber中继承了isEqualToNumber:```
+###Decimal Numbers in C
+For most practical`实用` purposes`目的`, the NSDecimalNumber class should satisfy`满足` your fixed-point needs; however, it’s worth noting that there is also a function-based alternative available`可用` in pure`纯` C. This provides increased efficiency`效率` over the OOP interface discussed above and is thus preferred`优先选择` for high-performance`性能` applications dealing with`处理` a large number of calculations.
+```对于大多数实用的目的,NSDecimalNumber应该能满足你定点的需要,然而,值得注意的是也有一个基于纯C语言的基础函数,它相对面向对象编程提供了效率在上面的讨论中,因此我们优先选择它为了一个高性能的应用处理一个大数的计算```
+###NSDecimal
+Instead of an NSDecimalNumber object, the C interface is built around the NSDecimal struct. Unfortunately, the Foundation Framework doesn’t make it easy to create an NSDecimal from scratch. You need to generate`生成` one from a full-fledged`成熟的` NSDecimalNumber using its decimalValue method. There is a corresponding`相应的` factory`工厂` method, also shown below.
+```代替NSDecimalNumber对象,C实例创建了一个NSDecimal结构体,不幸的,Foundation Framework没有使它很容易的创建从scratch,你需要去生成一个从一个成熟的NSDecimalNumber用它的decimalValue方法,它是一个相应的工厂方法,也被展示如下```
+
+{% highlight ruby %}
+NSDecimalNumber *price = [NSDecimalNumber decimalNumberWithString:@"15.99"];
+NSDecimal asStruct = [price decimalValue];
+NSDecimalNumber *asNewObject = [NSDecimalNumber decimalNumberWithDecimal:asStruct];
+{% endhighlight %}
+
+This isn’t exactly`准确的` an ideal `理想` way to create NSDecimal’s, but once you have a struct representation of your initial`初始` values, you can `stick to坚持` the functional API presented below. All of these functions use struct’s as inputs and outputs.
+
+```它不是一个准确的理想的方法去创建一个NSDecimal’s,但是一旦你有一个结构展现了你的初始值,你可以一直坚持这个功能API被提出,所有的函数用struct作为输入和输出```
+###Arithmetic Functions
+`In lieu of代替` the arithmetic methods of NSDecimalNumber, the C interface uses functions like NSDecimalAdd(), NSDecimalSubtract(), etc. Instead of returning the result, these functions populate`填入` the first argument with the calculated value. This makes it possible to reuse an existing NSDecimal in several operations and avoid allocating`分配` unnecessary structs just to hold intermediary`媒介` values.
+
+```代替计算方法的是NSDecimalNumber,C的接口用函数像NSDecimalAdd(), NSDecimalSubtract()等.代替结果的返回值,这个函数填入了第一个参数用一个可计算的值,这使它可以重用一个存在的NSDecimal在几个操作,避免分配不必要的结构体仅仅是为了保存媒介值```
+
+For example, the following snippet`片段` uses a single result variable across 5 function calls. Compare this to the Arithmetic section, which created a new NSDecimalNumber object for each calculation.
+```例如,以下的片段用���个结果变量被函数调用了5次,和算法节每一次计算都创建一个NSDecimalNumber做比较,```
+
+{% highlight ruby %}
+NSDecimal price1 = [[NSDecimalNumber decimalNumberWithString:@"15.99"] decimalValue];
+NSDecimal price2 = [[NSDecimalNumber decimalNumberWithString:@"29.99"] decimalValue];
+NSDecimal coupon = [[NSDecimalNumber decimalNumberWithString:@"5.00"] decimalValue];
+NSDecimal discount = [[NSDecimalNumber decimalNumberWithString:@".90"] decimalValue];
+NSDecimal numProducts = [[NSDecimalNumber decimalNumberWithString:@"2.0"] decimalValue]
+NSLocale *locale = [NSLocale currentLocale];
+NSDecimal result;
+NSDecimalAdd(&result, &price1, &price2, NSRoundUp);
+NSLog(@"Subtotal: %@", NSDecimalString(&result, locale));
+NSDecimalSubtract(&result, &result, &coupon, NSRoundUp);
+NSLog(@"After coupon: %@", NSDecimalString(&result, locale));
+NSDecimalMultiply(&result, &result, &discount, NSRoundUp);
+NSLog(@"After discount: %@", NSDecimalString(&result, locale));
+NSDecimalDivide(&result, &result, &numProducts, NSRoundUp);
+NSLog(@"Average price per product: %@", NSDecimalString(&result, locale));
+NSDecimalPower(&result, &result, 2, NSRoundUp);
+NSLog(@"Average price squared: %@", NSDecimalString(&result, locale));
+{% endhighlight %}
+
+
+Notice that these functions accept references to NSDecimal structs, which is why we need to use the reference operator (&) instead of passing them directly. Also note that rounding is an inherent`固有的,与生俱来的` part of each operation—it’s not encapsulated in a separate分开 entity`单独实体` like NSDecimalNumberHandler.
+
+```主意到这些函数接受一个NSDecimal结构体的引用,这是为什么我们需要用一个取址符(&)代替直接使用它们,也主意到凑整是每一个操作固有的一部分,它没有像NSDecimalNumberHandler被封装在一个分开的单独实体中```
+
+The NSLocale instance defines the formatting格式化 of NSDecimalString(), and is discussed讨论 more thoroughly彻底 in the Dates module.
+
+```NSLocale实例定义了NSDecimalString的格式化,讨论的更彻底在日期模块中```
+###Error Checking
+Unlike their OOP counterparts`相对物`, the arithmetic functions don’t raise exceptions when a calculation error occurs`发生`. Instead, they follow the common C pattern of using the return value to indicate`表明,象征` success or failure. All of the above`上文的` functions return an NSCalculationError, which defines what kind of error occurred. The potential可`能的` scenarios`情景` are demonstrated`演示` below.
+
+```不想它们的相对物面向对象编程,这个计算函数在计算错误发生时不会捕获异常,代替的是,它们允许普通的C模式用一个返回值去表明成功或者失败,所有上文的函数返回了一个NSCalculationError,它定义了发生了什么错误,这个可能的情景如下```
+
+{% highlight ruby %}
+NSDecimal a = [[NSDecimalNumber decimalNumberWithString:@"1.0"] decimalValue];
+NSDecimal b = [[NSDecimalNumber decimalNumberWithString:@"0.0"] decimalValue];
+NSDecimal result;
+NSCalculationError success = NSDecimalDivide(&result, &a, &b, NSRoundPlain);
+switch (success) {
+    case NSCalculationNoError:
+        NSLog(@"Operation successful");
+        break;
+    case NSCalculationLossOfPrecision:
+        NSLog(@"Error: Operation resulted in loss of precision");
+        break;
+    case NSCalculationUnderflow:
+        NSLog(@"Error: Operation resulted in underflow");
+        break;
+    case NSCalculationOverflow:
+        NSLog(@"Error: Operation resulted in overflow");
+        break;
+    case NSCalculationDivideByZero:
+        NSLog(@"Error: Tried to divide by zero");
+        break;
+    default:
+        break;
+}
+{% endhighlight %}
+
+###Comparing NSDecimals
+
+Comparing NSDecimal’s works exactly`正是` like the OOP interface, except you use the NSDecimalCompare() function:
+```比较NSDecimals的工作正是面向对象编程的实例,除非你用NSDecimalCompare()这个函数```
+
+{% highlight ruby %}
+NSDecimal discount1 = [[NSDecimalNumber decimalNumberWithString:@".85"] decimalValue];
+NSDecimal discount2 = [[NSDecimalNumber decimalNumberWithString:@".9"] decimalValue];
+NSComparisonResult result = NSDecimalCompare(&discount1, &discount2);
+if (result == NSOrderedAscending) {
+    NSLog(@"85%% < 90%%");
+} else if (result == NSOrderedSame) {
+    NSLog(@"85%% == 90%%");
+} else if (result == NSOrderedDescending) {
+    NSLog(@"85%% > 90%%");
+}
+{% endhighlight %}
+
+[RyPress]:      http://rypress.com/tutorials/objective-c/data-types/nsdecimalnumber
+
+
