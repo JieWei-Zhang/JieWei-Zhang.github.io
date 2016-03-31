@@ -6,11 +6,9 @@ date:   2016-03-21 10:04:23.000000000 +09:00
 
 #NSDecimalNumber
 
-英文好的可以直接[看这个][RyPress]
+英文好的可以直接[看这个](http://rypress.com/tutorials/objective-c/data-types/nsdecimalnumber)
 
-```
-在iOS开发中，和货币价格计算相关的，需要注意计算精度的问题。即使只是两位小数，也会出现误差。使用float类型运算，是完全不够的。所以我在网上来找寻答案,但是在百度找了好久,没有发现一个好的解决方案,后来发现了NSDecimalNumber这个类,但是国内搜索引擎上的资料用太少了,所以自己通过找资料的方法发现了如下这篇文章.
-```
+```在iOS开发中，和货币价格计算相关的，需要注意计算精度的问题。即使只是两位小数，也会出现误差。使用float类型运算，是完全不够的。所以我在网上来找寻答案,但是在百度找了好久,没有发现一个好的解决方案,后来发现了NSDecimalNumber这个类,但是国内搜索引擎上的资料用太少了,所以自己通过找资料的方法发现了如下这篇文章.```
 
 先叙述下我遇到的问题,我的服务器传给我的是一个float的值,作为一个对外的库，由于存在版本延续，需要保留对外的flaot的类型，不改变API，选择进行内部适配。
 
@@ -342,10 +340,5 @@ if (result == NSOrderedAscending) {
     NSLog(@"85%% > 90%%");
 }
 {% endhighlight %}
-
-
-
-
-[RyPress]:      http://rypress.com/tutorials/objective-c/data-types/nsdecimalnumber
 
 
